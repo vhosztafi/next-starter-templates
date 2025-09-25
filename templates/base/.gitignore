@@ -58,6 +58,7 @@ temp/
 .cache
 .parcel-cache
 
+node_modules/
 dist
 dist-ssr
 
