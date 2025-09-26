@@ -1,11 +1,15 @@
 export interface User {
-  id: string
+  sub: string
   email: string
   name?: string
-  image?: string
+  picture?: string
+  email_verified?: boolean
+  updated_at?: string
 }
 
 export interface Session {
   user: User
-  expires: string
+  accessToken?: string
+  idToken?: string
+  refreshToken?: string
 }

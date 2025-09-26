@@ -1,4 +1,5 @@
-import type { Session, User } from './types'
+import type { User } from './types'
+import { getSession } from './provider'
 
 // Re-export provider functions
 export { getSession, signIn, signOut, useAuth } from './provider'
