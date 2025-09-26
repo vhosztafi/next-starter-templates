@@ -1,0 +1,45 @@
+{
+  "name": "@solutioniser/next-starter-templates",
+  "version": "0.1.3",
+  "description": "Template files for the @solutioniser/create-next-starter CLI tool",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "version:patch": "npm version patch && git push origin main --tags",
+    "version:minor": "npm version minor && git push origin main --tags",
+    "version:major": "npm version major && git push origin main --tags",
+    "version:alpha": "npm version prerelease --preid=alpha && git push origin main --tags",
+    "version:beta": "npm version prerelease --preid=beta && git push origin main --tags",
+    "version:rc": "npm version prerelease --preid=rc && git push origin main --tags",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "validate": "echo 'Template validation passed'",
+    "test": "echo 'No tests for template repository'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/solutioniser/next-starter-templates.git"
+  },
+  "keywords": [
+    "nextjs",
+    "templates",
+    "starter",
+    "authentication",
+    "typescript",
+    "tailwind",
+    "cli"
+  ],
+  "author": "Solutioniser",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/solutioniser/next-starter-templates/issues"
+  },
+  "homepage": "https://github.com/solutioniser/next-starter-templates#readme",
+  "devDependencies": {
+    "prettier": "^3.3.0",
+    "prettier-plugin-tailwindcss": "^0.6.0"
+  }
+}

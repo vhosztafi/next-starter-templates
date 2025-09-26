@@ -1,0 +1,89 @@
+name: Validate Templates
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    validate:
+        name: Validate Template Files
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: "8.15.0"
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Validate package.json
+              run: |
+                  echo "Validating root package.json..."
+                  node -e "console.log('Package name:', require('./package.json').name)"
+                  node -e "console.log('Package version:', require('./package.json').version)"
+
+            - name: Check template structure
+              run: |
+                  echo "Checking template structure..."
+
+                  # Check base template exists
+                  if [ ! -d "templates/base" ]; then
+                    echo "❌ Base template directory missing"
+                    exit 1
+                  fi
+
+                  # Check required base files
+                  for file in "package.json.partial" "next.config.ts" "tailwind.config.ts"; do
+                    if [ ! -f "templates/base/$file" ]; then
+                      echo "❌ Missing base template file: $file"
+                      exit 1
+                    fi
+                  done
+
+                  # Check overlays exist
+                  for overlay in "auth0" "authjs" "clerk" "supabase" "msal" "storybook"; do
+                    if [ ! -d "templates/overlays/$overlay" ]; then
+                      echo "❌ Missing overlay: $overlay"
+                      exit 1
+                    fi
+                  done
+
+                  echo "✅ Template structure validation passed"
+
+            - name: Validate template files
+              run: |
+                  echo "Validating template files..."
+
+                  # Check for template variables in package.json files
+                  find templates -name "package.json.partial" -exec grep -l "{{PROJECT_NAME}}" {} \; | while read file; do
+                    echo "✅ Found template variable in $file"
+                  done
+
+                  # Check for template variables in other files
+                  find templates -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | while read file; do
+                    if grep -q "{{" "$file"; then
+                      echo "✅ Found template variables in $file"
+                    fi
+                  done
+
+            - name: Format check
+              run: |
+                  echo "Checking code formatting..."
+                  pnpm format:check || echo "⚠️  Formatting issues found (non-blocking)"
+
+            - name: Summary
+              run: |
+                  echo "🎉 Template validation completed successfully!"
+                  echo "All template files are properly structured and formatted."

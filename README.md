@@ -21,13 +21,48 @@ This repository is used by the `@solutioniser/create-next-starter` CLI tool. Use
 
 This repository uses semantic versioning. Each release tag corresponds to a template version that the CLI can use.
 
+### Release Process
+
+We use GitHub Actions for automated releases. To create a new release:
+
+1. Go to the **Actions** tab in GitHub
+2. Select **Release Templates** workflow
+3. Click **Run workflow**
+4. Choose the version bump type:
+   - **patch**: Bug fixes, documentation updates
+   - **minor**: New features, new overlays
+   - **major**: Breaking changes
+   - **alpha/beta/rc**: Pre-release versions
+
+The workflow will:
+- Bump the version in `package.json`
+- Update template versions automatically
+- Generate changelog entries
+- Create a GitHub release
+- Tag the repository
+
+### Manual Release
+
+You can also create releases manually:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Bump version
+npm version patch  # or minor, major, alpha, beta, rc
+
+# Push changes and tags
+git push origin main --tags
+```
+
 ## Development
 
 To update templates:
 
 1. Make your changes to the template files
 2. Test with the CLI tool
-3. Create a new release with a semantic version tag
+3. Use the GitHub Actions workflow or manual release process
 4. The CLI will automatically use the latest version
 
 ## CLI Usage

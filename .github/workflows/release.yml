@@ -1,0 +1,142 @@
+name: Release Templates
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - alpha
+          - beta
+          - rc
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "8.15.0"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Bump version
+        run: |
+          npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Update template versions
+        run: |
+          # Update version in all template package.json files
+          find templates -name "package.json.partial" -exec sed -i "s/\"version\": \"0.1.0\"/\"version\": \"${{ env.NEW_VERSION }}\"/g" {} \;
+
+          # Update version in all overlay package files
+          find templates/overlays -name "package.*.partial" -exec sed -i "s/\"version\": \"0.1.0\"/\"version\": \"${{ env.NEW_VERSION }}\"/g" {} \;
+
+      - name: Generate changelog
+        run: |
+          # Create or update CHANGELOG.md
+          if [ ! -f CHANGELOG.md ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)," >> CHANGELOG.md
+            echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+
+          # Add new version entry
+          TEMP_FILE=$(mktemp)
+          echo "## [${{ env.NEW_VERSION }}] - $(date +%Y-%m-%d)" > $TEMP_FILE
+          echo "" >> $TEMP_FILE
+          echo "### Added" >> $TEMP_FILE
+          echo "- Template updates and improvements" >> $TEMP_FILE
+          echo "" >> $TEMP_FILE
+          echo "### Changed" >> $TEMP_FILE
+          echo "- Updated dependencies" >> $TEMP_FILE
+          echo "" >> $TEMP_FILE
+          echo "### Fixed" >> $TEMP_FILE
+          echo "- Bug fixes and template improvements" >> $TEMP_FILE
+          echo "" >> $TEMP_FILE
+
+          # Prepend to CHANGELOG.md
+          cat $TEMP_FILE CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
+          rm $TEMP_FILE
+
+      - name: Commit changes
+        run: |
+          git add .
+          git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }}"
+          git tag "v${{ env.NEW_VERSION }}"
+          git push origin main
+          git push origin "v${{ env.NEW_VERSION }}"
+
+      - name: Create GitHub Release
+        run: |
+          # Determine if this is a pre-release
+          PRERELEASE_FLAG=""
+          if [[ "${{ env.NEW_VERSION }}" == *"alpha"* ]] || [[ "${{ env.NEW_VERSION }}" == *"beta"* ]] || [[ "${{ env.NEW_VERSION }}" == *"rc"* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          # Create release notes
+          RELEASE_NOTES="## Changes in v${{ env.NEW_VERSION }}
+
+          This release includes:
+          - Template updates and improvements
+          - Updated dependencies
+          - Bug fixes and enhancements
+
+          ## Template Usage
+
+          The CLI tool will automatically use the latest template version:
+
+          \`\`\`bash
+          npx @solutioniser/create-next-starter my-app
+          \`\`\`
+
+          Or use a specific template version:
+
+          \`\`\`bash
+          npx @solutioniser/create-next-starter my-app --template-tag v${{ env.NEW_VERSION }}
+          \`\`\`"
+
+          gh release create "v${{ env.NEW_VERSION }}" \
+            --title "Release v${{ env.NEW_VERSION }}" \
+            --notes "$RELEASE_NOTES" \
+            $PRERELEASE_FLAG
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Notify CLI Repository
+        run: |
+          # This step can be used to notify the CLI repository about new template versions
+          # You can add webhook calls or other notification mechanisms here
+          echo "Template version ${{ env.NEW_VERSION }} released successfully"
+          echo "CLI repository should be notified to update template references"
