@@ -23,8 +23,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -34,10 +32,16 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: "8.15.0"
+          version: latest
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (if any)
+        run: |
+          # Only install if package.json has dependencies
+          if [ -f "package.json" ] && [ "$(node -p "Object.keys(require('./package.json').dependencies || {}).length")" -gt 0 ]; then
+            pnpm install --frozen-lockfile
+          else
+            echo "No dependencies to install for template repository"
+          fi
 
       - name: Configure Git
         run: |
@@ -132,7 +136,7 @@ jobs:
             --notes "$RELEASE_NOTES" \
             $PRERELEASE_FLAG
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify CLI Repository
         run: |
