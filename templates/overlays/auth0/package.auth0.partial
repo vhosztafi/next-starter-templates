@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@auth0/nextjs-auth0": "^3.0.0"
+    "@auth0/nextjs-auth0": "^4.10.0"
   }
 }

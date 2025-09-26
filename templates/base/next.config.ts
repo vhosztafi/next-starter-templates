@@ -1,11 +1,17 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
   images: {
-    domains: [],
+    domains: ['s.gravatar.com'],
+  },
+  webpack: (config, { isServer }) => {
+    // Exclude MSW from server-side builds
+    if (isServer) {
+      config.externals = config.externals || []
+      config.externals.push('msw/browser')
+    }
+    return config
   },
   async headers() {
     return [
