@@ -1,6 +1,6 @@
 {
   "name": "@solutioniser/next-starter-templates",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Template files for the @solutioniser/create-next-starter CLI tool",
   "private": true,
   "type": "module",

@@ -1,3 +1,14 @@
+## [0.1.4] - 2025-09-26
+
+### Added
+- Template updates and improvements
+
+### Changed
+- Updated dependencies
+
+### Fixed
+- Bug fixes and template improvements
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
